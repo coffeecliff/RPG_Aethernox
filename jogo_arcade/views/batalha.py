@@ -1,7 +1,11 @@
 import arcade
 import random
+import os
 from config import *
 from sprites.inimigo import Inimigo
+
+
+CAMINHO_INIMIGO = os.path.join("..", "jogo_arcade", "imagens", "enemies", "enemie.png")
 
 
 class ViewBatalha(arcade.View):
@@ -13,10 +17,15 @@ class ViewBatalha(arcade.View):
 
         # Guarda o inimigo que iniciou a batalha
         self.inimigo = inimigo or Inimigo(x=LARGURA_TELA / 2, y=ALTURA_TELA * 0.72)
-        self.inimigo_sprite = self.inimigo
-        self.inimigo_lista = arcade.SpriteList([self.inimigo_sprite])
 
-        # Status
+        # 🔹 Tamanho ajustado do inimigo
+        self.inimigo_sprite = arcade.Sprite(CAMINHO_INIMIGO, scale=1)
+        self.inimigo_sprite.center_x = LARGURA_TELA / 2
+        self.inimigo_sprite.center_y = ALTURA_TELA * 0.55
+        self.inimigo_lista = arcade.SpriteList()
+        self.inimigo_lista.append(self.inimigo_sprite)
+
+        # Status do jogador e inimigo
         self.vida_jogador = 100
         self.level_jogador = 5
         self.ouro_jogador = 50
@@ -25,7 +34,7 @@ class ViewBatalha(arcade.View):
         self.mensagem = ""
         self.mensagem_timer = 0
 
-        # Boxes
+        # Configuração dos botões
         self.box_largura = 220
         self.box_altura = 70
         spacing = 60
@@ -38,68 +47,80 @@ class ViewBatalha(arcade.View):
             "Fugir": (self.start_x + 2 * (self.box_largura + spacing), self.start_y),
         }
 
+        # Controle do botão "Fugir"
+        self.fugir_desabilitado = False
+        self.fuga_sucesso = False  # <- controla se o player fugiu com sucesso
+
+    # =====================================================
+    #                         DESENHO
+    # =====================================================
     def on_draw(self):
         self.clear()
         self.camera_game.use()
-
-        # --- Barra de vida (posição base) ---
-        barra_largura = 500
-        barra_altura = 35
-        barra_left = LARGURA_TELA / 2 - barra_largura / 2
-        barra_bottom = ALTURA_TELA * 0.6  # ajuste se quiser mais alto/baixo
-
-        # --- Ajusta posição do inimigo (usa atributos caso existam) ---
-        self.inimigo_sprite.center_x = LARGURA_TELA / 2
-
-        # pega altura segura do sprite (fallback se não existir atributo height)
-        sprite_height = getattr(self.inimigo_sprite, "height", None)
-        if sprite_height is None:
-            # tenta obter pela textura, se houver
-            textura = getattr(self.inimigo_sprite, "texture", None)
-            sprite_height = getattr(textura, "height", 128)
-
-        # posiciona o inimigo logo acima da barra
-        self.inimigo_sprite.center_y = barra_bottom + barra_altura + (sprite_height / 2) + 30
-
-        # desenha via SpriteList (funciona mesmo que Inimigo não implemente draw())
         self.inimigo_lista.draw()
-
         self.camera_gui.use()
 
-        # --- Desenha a barra de vida ---
+        # --- Barra de vida do inimigo ---
+        barra_largura, barra_altura = 500, 35
+        barra_left = LARGURA_TELA / 2 - barra_largura / 2
+        barra_bottom = self.inimigo_sprite.center_y + self.inimigo_sprite.height / 2 + 40
         arcade.draw_lbwh_rectangle_filled(barra_left, barra_bottom, barra_largura, barra_altura, arcade.color.DARK_RED)
         vida_width = barra_largura * (self.vida_inimigo / self.max_vida_inimigo)
         arcade.draw_lbwh_rectangle_filled(barra_left, barra_bottom, vida_width, barra_altura, COR_BARRA_VIDA_INIMIGO)
 
-        # --- Nome do inimigo (opcional) ---
-        arcade.draw_text(
-            "INIMIGO",
-            LARGURA_TELA / 2,
-            barra_bottom + barra_altura + sprite_height + 60,
-            arcade.color.WHITE, 26, anchor_x="center"
-        )
-
-        # --- Caixas e HUD (mesmo que antes) ---
+        # --- Botões ---
         for nome, (x, y) in self.box_coords.items():
-            arcade.draw_lbwh_rectangle_filled(x, y, self.box_largura, self.box_altura, COR_CAIXA)
-            arcade.draw_text(nome, x + self.box_largura / 2, y + self.box_altura / 2, COR_TEXTO, 28,
-                            anchor_x="center", anchor_y="center")
+            if nome == "Fugir" and self.fugir_desabilitado:
+                alpha = 100  # transparente se falhou em fugir
+            else:
+                alpha = 255
+            cor_botao = (*COR_CAIXA[:3], alpha)
+            arcade.draw_lbwh_rectangle_filled(x, y, self.box_largura, self.box_altura, cor_botao)
+            arcade.draw_text(
+                nome,
+                x + self.box_largura / 2,
+                y + self.box_altura / 2,
+                COR_TEXTO,
+                28,
+                anchor_x="center",
+                anchor_y="center",
+            )
 
+        # --- HUD jogador ---
         base_x = 60
         arcade.draw_text(f"Vida: {self.vida_jogador}", base_x, 60, COR_TEXTO, 26)
         arcade.draw_text(f"Level: {self.level_jogador}", base_x, 100, COR_TEXTO, 26)
         arcade.draw_text(f"Ouro: {self.ouro_jogador}", base_x, 140, COR_TEXTO, 26)
 
+        # --- Mensagem temporária ---
         if self.mensagem_timer > 0:
-            arcade.draw_text(self.mensagem, LARGURA_TELA / 2, self.start_y + 160, COR_MENSAGEM, 36, anchor_x="center")
+            arcade.draw_text(
+                self.mensagem,
+                LARGURA_TELA / 2,
+                self.start_y + 160,
+                COR_MENSAGEM,
+                36,
+                anchor_x="center",
+                align="center",
+                multiline=True,
+                width=600,
+            )
             self.mensagem_timer -= 1
 
-
+    # =====================================================
+    #                    EVENTOS DE CLIQUE
+    # =====================================================
     def on_mouse_press(self, x, y, button, modifiers):
         for nome, (bx, by) in self.box_coords.items():
+            if nome == "Fugir" and self.fugir_desabilitado:
+                continue  # se já falhou, botão inativo
             if bx <= x <= bx + self.box_largura and by <= y <= by + self.box_altura:
                 self.acao(nome)
+                break
 
+    # =====================================================
+    #                      AÇÕES
+    # =====================================================
     def acao(self, nome):
         if nome == "Luta":
             dano = random.randint(10, 25)
@@ -121,10 +142,30 @@ class ViewBatalha(arcade.View):
             self.mensagem_timer = 120
 
         elif nome == "Fugir":
-            self.mensagem = "Você fugiu da batalha!"
-            self.mensagem_timer = 120
-            arcade.schedule(self.voltar_mundo, 1)
+            vida_ratio = self.vida_jogador / 100
+            chance_fuga = 60
+            if vida_ratio <= 0.3:
+                chance_fuga += 20
+            resultado = random.randint(1, 100)
 
+            if resultado <= chance_fuga:
+                self.mensagem = "Você conseguiu fugir!"
+                self.mensagem_timer = 120
+                self.fuga_sucesso = True  # ✅ marca fuga bem-sucedida
+                arcade.schedule(self.voltar_mundo, 1)
+            else:
+                self.mensagem = "Você tentou fugir, mas o inimigo bloqueou sua saída!"
+                self.mensagem_timer = 120
+                self.fugir_desabilitado = True
+
+                # Inimigo contra-ataca
+                dano = random.randint(5, 15)
+                self.vida_jogador = max(self.vida_jogador - dano, 0)
+                self.mensagem += f"\nO inimigo contra-atacou e causou {dano} de dano!"
+
+    # =====================================================
+    #                VOLTAR AO MUNDO
+    # =====================================================
     def voltar_mundo(self, delta_time):
         """Retorna à cena do mundo, removendo o inimigo de forma segura."""
         arcade.unschedule(self.voltar_mundo)
@@ -142,24 +183,24 @@ class ViewBatalha(arcade.View):
         mundo.player_sprite.center_y = estado.player_pos[1]
         mundo.facing_right = estado.player_facing
 
-        # ✅ Remoção segura do inimigo derrotado
-        if self.vida_inimigo <= 0 and hasattr(mundo, "inimigos") and self.inimigo:
-            if self.inimigo in mundo.inimigos:
-                try:
-                    self.inimigo.remove_from_sprite_lists()
-                except Exception:
-                    pass  # caso já tenha sido removido internamente
+        # ✅ Se inimigo foi derrotado OU fuga bem-sucedida, remove do mapa
+        if hasattr(mundo, "inimigos") and hasattr(self, "inimigo") and self.inimigo:
+            if self.fuga_sucesso or self.vida_inimigo <= 0:
+                if self.inimigo in mundo.inimigos:
+                    try:
+                        self.inimigo.remove_from_sprite_lists()
+                    except Exception:
+                        pass
+                    try:
+                        mundo.inimigos.remove(self.inimigo)
+                    except ValueError:
+                        pass
 
-                try:
-                    mundo.inimigos.remove(self.inimigo)
-                except ValueError:
-                    pass  # caso já não esteja mais na lista
+                # Só marca como derrotado se ele morreu (não fuga)
+                if self.vida_inimigo <= 0 and hasattr(self.inimigo, "id") and hasattr(estado, "inimigos_derrotados"):
+                    estado.inimigos_derrotados.add(f"inimigo_{self.inimigo.id}")
 
-            # marca como derrotado para não reaparecer
-            if hasattr(self.inimigo, "id") and hasattr(estado, "inimigos_derrotados"):
-                estado.inimigos_derrotados.add(f"inimigo_{self.inimigo.id}")
-
-        # ✅ Corrige movimento e fundo ao retornar
+        # Corrige movimento e fundo ao retornar
         mundo.moving_left = False
         mundo.moving_right = False
         mundo.velocity_x = 0
