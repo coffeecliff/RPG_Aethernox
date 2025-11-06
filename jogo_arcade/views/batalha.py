@@ -6,8 +6,14 @@ from sklearn.ensemble import RandomForestClassifier
 from config import *
 from sprites.inimigo import Inimigo
 from views.gameover import ViewGameOver
+from pathlib import Path
 
-CAMINHO_INIMIGO = os.path.join("..", "jogo_arcade", "imagens", "enemies", "enemie.png")
+# Caminho base do projeto (ajuste conforme a posição deste arquivo)
+BASE_DIR = Path(__file__).resolve().parent.parent  # sobe um nível se este arquivo estiver dentro de /views/
+IMAGENS_DIR = BASE_DIR / "imagens"
+
+# Caminho do inimigo
+CAMINHO_INIMIGO = IMAGENS_DIR / "enemies" / "enemie.png"
 
 class ViewBatalha(arcade.View):
     def __init__(self, jogador=None, inimigo=None):

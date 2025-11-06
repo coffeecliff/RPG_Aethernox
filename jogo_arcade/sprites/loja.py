@@ -1,0 +1,172 @@
+import arcade
+from config import *
+
+# ============================================================
+# CLASSE LOJA — FUNCIONA COMO UM ELEMENTO NO MUNDO
+# ============================================================
+
+class Loja(arcade.Sprite):
+    # ========================================================
+    # NOVO: __init__ completo (com parâmetros x, y, id)
+    # ========================================================
+    def __init__(self, x, y, id=0):
+        # NOVO: não herda textura direta — é um sprite visual simples
+        super().__init__(filename=None, center_x=x, center_y=y)
+        self.id = id
+        self.width = 80
+        self.height = 120
+        self.color = arcade.color.GOLDENROD
+        self.aberta = False  # se a loja está aberta
+        self.text_objects = []  # textos otimizados (arcade.Text)
+        self.itens = [
+            {"number": "[1]", "nome": "Poção de Vida", "efeito": "+20 HP", "preco": 30},
+            {"number": "[2]", "nome": "Poção de Mana", "efeito": "+15 MP", "preco": 25},
+            {"number": "[3]", "nome": "Espada de Ferro", "efeito": "+5 ATQ", "preco": 100},
+            {"number": "[4]", "nome": "Armadura Leve", "efeito": "+3 DEF", "preco": 80},
+        ]
+        self._criar_textos_otimizados()  # NOVO: cria textos uma vez
+
+    # ========================================================
+    # ANTIGO: __init__ sem argumentos x/y/id
+    # ========================================================
+    # def __init__(self):
+    #     super().__init__()
+    #     self.aberta = False
+    #     self.id = 0
+    #     self.itens = [
+    #         {"nome": "Poção de Vida", "efeito": "+20 HP", "preco": 30},
+    #         {"nome": "Poção de Mana", "efeito": "+15 MP", "preco": 25},
+    #         {"nome": "Espada de Ferro", "efeito": "+5 ATQ", "preco": 100},
+    #         {"nome": "Armadura Leve", "efeito": "+3 DEF", "preco": 80},
+    #     ]
+
+    # ========================================================
+    # NOVO: desenha o sprite da loja no mundo
+    # ========================================================
+    def draw(self):
+        arcade.draw_rectangle_filled(self.center_x, self.center_y, self.width, self.height, self.color)
+        arcade.draw_text("Loja", self.center_x, self.center_y + 70, arcade.color.BLACK, 12, anchor_x="center")
+
+    # ========================================================
+    # NOVO: cria objetos de texto otimizados
+    # ========================================================
+    def _criar_textos_otimizados(self):
+        """Cria objetos arcade.Text (muito mais leves que draw_text)"""
+        self.text_objects.clear()
+        start_y = ALTURA_TELA - 250
+        for i, item in enumerate(self.itens):
+            y = start_y - i * 40
+            texto = arcade.Text(
+                f"{item['nome']} - {item['efeito']} ({item['preco']}G)",
+                180,
+                y,
+                arcade.color.BLACK,
+                18,
+            )
+            self.text_objects.append(texto)
+
+    # ========================================================
+    # NOVO: função que desenha a janela fixa
+    # ========================================================
+    def draw_janela(self, jogador, camera=None):
+        if not self.aberta:
+            return
+
+        # === Converter posição da loja para coordenadas de tela ===
+        offset_x, offset_y = (0, 0)
+        if camera:
+            # a câmera tem uma posição que desloca o mundo — precisamos compensar isso
+            offset_x = -camera.position[0] + LARGURA_TELA / 2
+            offset_y = -camera.position[1] + ALTURA_TELA / 2
+
+        # === Configurações básicas ===
+        largura_janela = 420
+        altura_janela = 300
+        margem = 20
+
+        # Posição base da janela (acima da loja, convertida p/ tela)
+        loja_x_tela = self.center_x + offset_x
+        loja_y_tela = self.center_y + offset_y
+
+        left = loja_x_tela - largura_janela / 2
+        right = loja_x_tela + largura_janela / 2
+        bottom = loja_y_tela + self.height / 2 + 20
+        top = bottom + altura_janela
+
+        # === Ajuste para não sair da tela ===
+        if left < margem:
+            right += (margem - left)
+            left = margem
+        if right > LARGURA_TELA - margem:
+            left -= (right - (LARGURA_TELA - margem))
+            right = LARGURA_TELA - margem
+        if top > ALTURA_TELA - margem:
+            diff = top - (ALTURA_TELA - margem)
+            top -= diff
+            bottom -= diff
+
+        # === Fundo e moldura ===
+        arcade.draw_lrbt_rectangle_filled(left, right, bottom, top, arcade.color.BEIGE)
+        arcade.draw_lrbt_rectangle_outline(left, right, bottom, top, arcade.color.BLACK, border_width=3)
+
+        # === Título ===
+        arcade.draw_text(
+            "🏪 Loja de Itens",
+            (left + right) / 2,
+            top - 40,
+            arcade.color.BLACK,
+            22,
+            anchor_x="center",
+            bold=True,
+        )
+
+        # === Itens ===
+        start_y = top - 80
+        for i, item in enumerate(self.itens):
+            y = start_y - i * 35
+            texto = f"{item['number']} {item['nome']} - {item['efeito']} ({item['preco']}G)"
+            arcade.draw_text(texto, left + 30, y, arcade.color.BLACK, 16)
+
+        # === Ouro do jogador ===
+        arcade.draw_text(
+            f"Seu ouro: {jogador.ouro} Moedas",
+            left + 30,
+            bottom + 25,
+            arcade.color.DARK_YELLOW,
+            18,
+            bold=True,
+        )
+
+    # ========================================================
+    # NOVO: compra de item
+    # ========================================================
+    def comprar_item(self, jogador, indice):
+        """Permite comprar um item pelo índice"""
+        if indice < 0 or indice >= len(self.itens):
+            return
+        item = self.itens[indice]
+        if jogador.ouro >= item["preco"]:
+            jogador.ouro -= item["preco"]
+            jogador.inventario[item["nome"]] = jogador.inventario.get(item["nome"], 0) + 1
+            arcade.play_sound(arcade.sound.load_sound(":resources:sounds/coin5.wav"))
+        else:
+            arcade.play_sound(arcade.sound.load_sound(":resources:sounds/error3.wav"))
+
+    # ========================================================
+    # NOVO: controle por teclado
+    # ========================================================
+    def on_key_press(self, key, modifiers, jogador):
+        """Controle de navegação e compra"""
+        if not self.aberta:
+            return
+        if key == arcade.key.ESCAPE:
+            self.fechar_loja()
+        elif key == arcade.key.KEY_1:
+            self.comprar_item(jogador, 0)
+        elif key == arcade.key.KEY_2:
+            self.comprar_item(jogador, 1)
+        elif key == arcade.key.KEY_3:
+            self.comprar_item(jogador, 2)
+        elif key == arcade.key.KEY_4:
+            self.comprar_item(jogador, 3)
+
