@@ -9,6 +9,34 @@ class GameState:
         self.player_facing = True
         self.inimigos_derrotados = set()
 
+ESTATISTICAS_PERSONAGENS = {
+    "Guerreiro": {"vida": 120, "ataque": 15, "defesa": 10, "velocidade": 5, "classe": "Forte em combate corpo a corpo, alta resistência."},
+    "Mago": {"vida": 80, "ataque": 25, "defesa": 5, "velocidade": 7, "classe": "Alta magia, mas pouca defesa física."},
+    "Arqueiro": {"vida": 100, "ataque": 18, "defesa": 8, "velocidade": 10, "classe": "Ágil e preciso, equilíbrio entre ataque e defesa."},
+}
+
+# ================== CENA DE CARTAS ==================
+ESCALA_CARTA = 0.4
+ESCALA_HOVER = 0.45
+AMPLITUDE_FLUTUACAO = 4
+FREQUENCIA_FLUTUACAO = 0.8
+AMPLITUDE_ROTACAO = 2
+FREQUENCIA_ROTACAO = 0.5
+
+
+# ================== CENA DO MUNDO ==================
+MAX_SPEED = 8
+ACCELERATION = 0.2
+FRICTION = 0.1
+ANIMATION_SPEED = 0.2
+
+
+# ================== CENA DE BATALHA ==================
+COR_CAIXA = arcade.color.LIGHT_GRAY
+COR_TEXTO = arcade.color.BLACK
+COR_BARRA_VIDA_INIMIGO = arcade.color.RED
+COR_MENSAGEM = arcade.color.YELLOW
+
 
 # ================== CONFIGURAÇÕES GERAIS ==================
 LARGURA_TELA = 1920
@@ -25,7 +53,12 @@ CAMINHO_INIMIGO = os.path.join("..", "jogo_arcade", "imagens", "enemies", "enemi
 
 PLAYER1_IDLE = [
     os.path.join("..", "jogo_arcade", "sprites", "joana", "idle1.png"),
+    os.path.join("..", "jogo_arcade", "sprites", "joana", "idle1.png"),
+    os.path.join("..", "jogo_arcade", "sprites", "joana", "idle1.png"),
+    os.path.join("..", "jogo_arcade", "sprites", "joana", "idle1.png"),
     os.path.join("..", "jogo_arcade", "sprites", "joana", "idle2.png"),
+    os.path.join("..", "jogo_arcade", "sprites", "joana", "idle3.png"),
+    os.path.join("..", "jogo_arcade", "sprites", "joana", "idle3.png"),
     os.path.join("..", "jogo_arcade", "sprites", "joana", "idle3.png")
 ]
 PLAYER1_WALK = [
@@ -45,22 +78,4 @@ PLAYER3_WALK = [
     os.path.join("..", "jogo_arcade", "sprites", "archer", "idle1.jpg")
 ]
 
-# ================== CENA DE CARTAS ==================
-ESCALA_CARTA = 0.4
-ESCALA_HOVER = 0.45
-AMPLITUDE_FLUTUACAO = 4
-FREQUENCIA_FLUTUACAO = 0.8
-AMPLITUDE_ROTACAO = 2
-FREQUENCIA_ROTACAO = 0.5
 
-# ================== CENA DO MUNDO ==================
-MAX_SPEED = 8
-ACCELERATION = 0.2
-FRICTION = 0.1
-ANIMATION_SPEED = 0.17
-
-# ================== CENA DE BATALHA ==================
-COR_CAIXA = arcade.color.LIGHT_GRAY
-COR_TEXTO = arcade.color.BLACK
-COR_BARRA_VIDA_INIMIGO = arcade.color.RED
-COR_MENSAGEM = arcade.color.YELLOW

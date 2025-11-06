@@ -90,7 +90,7 @@ class ViewMundo(arcade.View):
 
         # --- Inimigos múltiplos ---
         self.inimigos = arcade.SpriteList()
-        posicoes_inimigos = [(2400, 290), (3000, 290), (3600, 290)]  # adicione quantos quiser
+        posicoes_inimigos = [(2400, 340), (3000, 340), (3600, 340), ]  # adicione quantos quiser
         estado = getattr(self.window, "game_state", None)
 
         for i, (x, y) in enumerate(posicoes_inimigos, start=1):
@@ -170,10 +170,15 @@ class ViewMundo(arcade.View):
         # Colisão com inimigos
         for inimigo in self.inimigos:
             if arcade.check_for_collision(self.player_sprite, inimigo):
+                # Salva estado atual do mundo
                 self.window.game_state.cena_mundo = self
                 self.window.game_state.player_pos = (self.player_sprite.center_x, self.player_sprite.center_y)
                 self.window.game_state.player_facing = self.facing_right
 
+                # Salva o inimigo que está em batalha
+                self.window.game_state.inimigo_em_batalha = inimigo
+
+                # Inicia a batalha
                 from views.batalha import ViewBatalha
                 batalha = ViewBatalha(inimigo)
                 self.window.show_view(batalha)
