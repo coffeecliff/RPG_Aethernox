@@ -2,6 +2,8 @@ import arcade
 import os
 from config import *
 from sprites.inimigo import Inimigo
+from views.batalha import ViewBatalha
+from types import SimpleNamespace
 
 class ViewMundo(arcade.View):
     def __init__(self):
@@ -9,6 +11,7 @@ class ViewMundo(arcade.View):
 
         # Caminho da imagem de fundo
         background_path = os.path.join("../jogo_arcade/imagens", "ceu.jpg")
+        estado = getattr(self.window, "game_state", None)
 
         # Cria um SpriteList para o fundo
         self.background_list = arcade.SpriteList()
@@ -70,6 +73,26 @@ class ViewMundo(arcade.View):
         self.player_sprite.center_y = ALTURA_TELA // 2.7
         self.all_sprites.append(self.player_sprite)
 
+        # Se ainda não existe jogador, cria
+        if estado.jogador is None:
+            personagem = getattr(estado, "personagem_escolhido", "Guerreiro")
+            stats = ESTATISTICAS_PERSONAGENS[personagem]
+
+            estado.jogador = SimpleNamespace(
+                nome="Herói",
+                classe=personagem,
+                vida=stats["vida"],
+                vida_max=stats["vida"],
+                mana=50,
+                mana_max=50,
+                ataque=stats["ataque"],
+                defesa=stats["defesa"],
+                velocidade=stats["velocidade"],
+                inventario={"Poção": 3}
+            )
+
+        # Usa o jogador persistente
+        self.jogador = estado.jogador
 
         # Cenário
         for x in range(0, 5000, 400):
@@ -178,9 +201,11 @@ class ViewMundo(arcade.View):
                 # Salva o inimigo que está em batalha
                 self.window.game_state.inimigo_em_batalha = inimigo
 
-                # Inicia a batalha
-                from views.batalha import ViewBatalha
-                batalha = ViewBatalha(inimigo)
+                # Recupera jogador persistente do estado global
+                jogador = getattr(self.window.game_state, "jogador", None)
+
+                # Cria a batalha passando jogador e inimigo
+                batalha = ViewBatalha(jogador=self.jogador, inimigo=inimigo)
                 self.window.show_view(batalha)
                 break
 

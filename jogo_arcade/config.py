@@ -8,11 +8,32 @@ class GameState:
         self.player_pos = (0, 0)
         self.player_facing = True
         self.inimigos_derrotados = set()
+        self.jogador = None  # 🔹 jogador persistente entre batalhas
 
 ESTATISTICAS_PERSONAGENS = {
-    "Guerreiro": {"vida": 120, "ataque": 15, "defesa": 10, "velocidade": 5, "classe": "Forte em combate corpo a corpo, alta resistência."},
-    "Mago": {"vida": 80, "ataque": 25, "defesa": 5, "velocidade": 7, "classe": "Alta magia, mas pouca defesa física."},
-    "Arqueiro": {"vida": 100, "ataque": 18, "defesa": 8, "velocidade": 10, "classe": "Ágil e preciso, equilíbrio entre ataque e defesa."},
+    "Guerreiro": {"vida": 120, 
+                  "ataque": 15, 
+                  "defesa": 10, 
+                  "mana": 30, 
+                  "mana_max": 30, 
+                  "velocidade": 5, 
+                  "classe": "Forte em combate corpo a corpo, alta resistência."},
+
+        "Mago": {"vida": 80, 
+                "ataque": 25, 
+                "defesa": 5, 
+                "mana": 100, 
+                "mana_max": 100, 
+                "velocidade": 7, 
+                "classe": "Alta magia, mas pouca defesa física."},
+
+    "Arqueiro": {"vida": 100, 
+                 "ataque": 18, 
+                 "defesa": 8, 
+                 "mana": 50, 
+                 "mana_max": 50, 
+                 "velocidade": 10, 
+                 "classe": "Ágil e preciso, equilíbrio entre ataque e defesa."},
 }
 
 # ================== CENA DE CARTAS ==================
@@ -68,11 +89,19 @@ PLAYER1_WALK = [
     os.path.join("..", "jogo_arcade", "sprites", "joana", "walk4.png")
 ]
 
+PLAYER2_IDLE = [
+    os.path.join("..", "jogo_arcade", "sprites", "mage", "idle1.jpg"),
+    os.path.join("..", "jogo_arcade", "sprites", "mage", "idle1.jpg")
+]
 PLAYER2_WALK = [
     os.path.join("..", "jogo_arcade", "sprites", "mage", "idle1.jpg"),
     os.path.join("..", "jogo_arcade", "sprites", "mage", "idle1.jpg")
 ]
 
+PLAYER3_IDLE = [
+    os.path.join("..", "jogo_arcade", "sprites", "mage", "idle1.jpg"),
+    os.path.join("..", "jogo_arcade", "sprites", "mage", "idle1.jpg")
+]
 PLAYER3_WALK = [
     os.path.join("..", "jogo_arcade", "sprites", "archer", "idle1.jpg"),
     os.path.join("..", "jogo_arcade", "sprites", "archer", "idle1.jpg")

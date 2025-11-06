@@ -5,7 +5,8 @@ from config import LARGURA_TELA, ALTURA_TELA, ESTATISTICAS_PERSONAGENS
 class ViewCartas(arcade.View):
     def __init__(self):
         super().__init__()
-        arcade.set_background_color(arcade.color.DARK_TAN)
+        arcade.set_background_color(arcade.color.FRENCH_BISTRE
+                                    )
         self.cartas = []
         self.sprites = arcade.SpriteList()
         nomes = ["Mago", "Guerreiro", "Arqueiro"]
