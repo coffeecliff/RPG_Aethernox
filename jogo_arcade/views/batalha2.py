@@ -4,7 +4,7 @@ import os
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from config import *
-from sprites.inimigo import Inimigo
+from sprites.inimigo2 import Inimigo2
 from views.gameover import ViewGameOver
 from pathlib import Path
 
@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent  # sobe um nível se este arqu
 IMAGENS_DIR = BASE_DIR / "imagens"
 
 # Caminho do inimigo
-CAMINHO_INIMIGO = IMAGENS_DIR / "enemies" / "esqueleto.png"
+CAMINHO_INIMIGO = IMAGENS_DIR / "enemies" / "cultista.png"
 
 class ViewBatalha(arcade.View):
     def __init__(self, jogador=None, inimigo=None):
@@ -72,9 +72,9 @@ class ViewBatalha(arcade.View):
         self.turno = 1
 
         # Sprite e objeto inimigo
-        self.inimigo = inimigo or Inimigo(x=LARGURA_TELA / 2, y=ALTURA_TELA * 0.72)
+        self.inimigo = inimigo or Inimigo2(x=LARGURA_TELA / 2, y=ALTURA_TELA * 0.72)
         self.dano_inimigo_mensagens = []
-        self.inimigo_sprite = arcade.Sprite(CAMINHO_INIMIGO, scale=0.4)
+        self.inimigo_sprite = arcade.Sprite(CAMINHO_INIMIGO, scale=1)
         self.inimigo_sprite.center_x = LARGURA_TELA / 2
         self.inimigo_sprite.center_y = ALTURA_TELA * 0.55
         self.inimigo_lista = arcade.SpriteList()

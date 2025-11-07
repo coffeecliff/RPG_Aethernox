@@ -2,15 +2,15 @@ import arcade
 import os
 from config import CAMINHO_INIMIGO
 
-class Inimigo(arcade.Sprite):
+class Inimigo2(arcade.Sprite):
     def __init__(
         self,
-        nome="Esqueleto",
+        nome="Cultista",
         classe="Inimigo",
-        scale=0.35,
+        scale=0.5,
         x=960,
         y=780,
-        vida_max=120,
+        vida_max=80,
         mana_max=60,
     ):
         # --- validação do arquivo de imagem ---
@@ -33,8 +33,8 @@ class Inimigo(arcade.Sprite):
         self.mana = mana_max
 
         # --- estatísticas opcionais ---
-        self.forca = 10
-        self.defesa = 5
+        self.forca = 16
+        self.defesa = 8
         self.inteligencia = 8
         self.velocidade = 4
 

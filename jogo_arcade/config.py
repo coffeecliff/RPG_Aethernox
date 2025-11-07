@@ -86,13 +86,14 @@ SPRITES_DIR = BASE_DIR / "sprites"
  
 # Cartas
 IMAGENS_CARTAS = {
-    "Mago": IMAGENS_DIR / "character_cards" / "card.png",
-    "Guerreiro": IMAGENS_DIR / "character_cards" / "card.png",
-    "Arqueiro": IMAGENS_DIR / "character_cards" / "card.png",
+    "Mago": IMAGENS_DIR / "character_cards" / "mage_card.png",
+    "Guerreiro": IMAGENS_DIR / "character_cards" / "joana_card.png",
+    "Arqueiro": IMAGENS_DIR / "character_cards" / "archer_card.png",
 }
  
 # Inimigos
-CAMINHO_INIMIGO = IMAGENS_DIR / "enemies" / "enemie.png"
+CAMINHO_INIMIGO = IMAGENS_DIR / "enemies" / "esqueleto.png"
+CAMINHO_INIMIGO2 = IMAGENS_DIR / "enemies" / "cultista.png"
  
 # PLAYER 1 (Joana)
 PLAYER1_IDLE = [
@@ -100,10 +101,10 @@ PLAYER1_IDLE = [
     SPRITES_DIR / "joana" / "idle1.png",
     SPRITES_DIR / "joana" / "idle1.png",
     SPRITES_DIR / "joana" / "idle1.png",
+    SPRITES_DIR / "joana" / "idle1.png",
     SPRITES_DIR / "joana" / "idle2.png",
-    SPRITES_DIR / "joana" / "idle3.png",
-    SPRITES_DIR / "joana" / "idle3.png",
-    SPRITES_DIR / "joana" / "idle3.png",
+    SPRITES_DIR / "joana" / "idle2.png",
+    SPRITES_DIR / "joana" / "idle2.png",
 ]
  
 PLAYER1_WALK = [
@@ -115,22 +116,37 @@ PLAYER1_WALK = [
  
 # PLAYER 2 (Mage)
 PLAYER2_IDLE = [
-    SPRITES_DIR / "mage" / "idle1.jpg",
-    SPRITES_DIR / "mage" / "idle1.jpg",
+    SPRITES_DIR / "mage" / "idle1.png",
+    SPRITES_DIR / "mage" / "idle1.png",
+    SPRITES_DIR / "mage" / "idle1.png",
+    SPRITES_DIR / "mage" / "idle1.png",
+    SPRITES_DIR / "mage" / "idle1.png",
+    SPRITES_DIR / "mage" / "idle2.png",
+    SPRITES_DIR / "mage" / "idle2.png",
+    SPRITES_DIR / "mage" / "idle2.png",
 ]
  
 PLAYER2_WALK = [
-    SPRITES_DIR / "mage" / "idle1.jpg",
-    SPRITES_DIR / "mage" / "idle1.jpg",
+    SPRITES_DIR / "mage" / "walk1.png",
+    SPRITES_DIR / "mage" / "walk2.png",
+    SPRITES_DIR / "mage" / "walk3.png",
 ]
- 
+
 # PLAYER 3 (Archer)
 PLAYER3_IDLE = [
-    SPRITES_DIR / "archer" / "idle1.jpg",
-    SPRITES_DIR / "archer" / "idle1.jpg",
+    SPRITES_DIR / "archer" / "idle1.png",
+    SPRITES_DIR / "archer" / "idle1.png",
+    SPRITES_DIR / "archer" / "idle1.png",
+    SPRITES_DIR / "archer" / "idle1.png",
+    SPRITES_DIR / "archer" / "idle1.png",
+    SPRITES_DIR / "archer" / "idle2.png",
+    SPRITES_DIR / "archer" / "idle2.png",
+    SPRITES_DIR / "archer" / "idle2.png",
 ]
  
 PLAYER3_WALK = [
-    SPRITES_DIR / "archer" / "idle1.jpg",
-    SPRITES_DIR / "archer" / "idle1.jpg",
+    SPRITES_DIR / "archer" / "walk1.png",
+    SPRITES_DIR / "archer" / "walk2.png",
+    SPRITES_DIR / "archer" / "walk3.png",
+    SPRITES_DIR / "archer" / "walk4.png",
 ]
