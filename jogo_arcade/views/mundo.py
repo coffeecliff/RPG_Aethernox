@@ -128,7 +128,7 @@ class ViewMundo(arcade.View):
 
         # --- Inimigos ---
         self.inimigos = arcade.SpriteList()
-        posicoes_inimigos = [(2400, 340), (3600, 340), (4200, 340)]
+        posicoes_inimigos = [(2400, 395), (3600, 395), (4200, 395)]
         if estado:
             for i, (x, y) in enumerate(posicoes_inimigos, start=1):
                 nome_inimigo = f"inimigo_{i}"

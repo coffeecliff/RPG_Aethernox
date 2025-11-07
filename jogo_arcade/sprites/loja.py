@@ -7,7 +7,7 @@ from config import *
 caminho_imagem_loja = IMAGENS_DIR / "loja.png"
 
 class Loja(arcade.Sprite):
-    def __init__(self, x, y, id=0, imagem=None, scale=1.0):
+    def __init__(self, x, y, id=0, imagem=caminho_imagem_loja, scale=1.0):
         self.id = id
         self.aberta = False
         self.text_objects = []
