@@ -18,8 +18,7 @@ class ViewMundo(arcade.View):
         
 
         # Caminho do fundo
-        background_path = IMAGENS_DIR / "ceu.jpg"
-        ground_texture_path = IMAGENS_DIR / "tiles" / "grass.jpg"
+        background_path = IMAGENS_DIR / "mundo1" / "cenario1.png"
 
         estado = getattr(self.window, "game_state", None)
         
@@ -29,12 +28,19 @@ class ViewMundo(arcade.View):
         # Estado do jogo, se existir
         self.estado = getattr(self.window, "game_state", None)
 
-        # Fundo
+        # Fundo — largo e em loop horizontal, mas sem se mover sozinho
         self.background_list = arcade.SpriteList()
-        self.background_sprite = arcade.Sprite(background_path)
-        self.background_sprite.center_x = LARGURA_TELA // 3
-        self.background_sprite.center_y = ALTURA_TELA // 3
-        self.background_list.append(self.background_sprite)
+
+        # Tamanho total do fundo (ex: 3x mais largo que a tela)
+        LARGURA_TOTAL_FUNDO = LARGURA_TELA * 3
+
+        # Carrega a textura e cria múltiplas cópias lado a lado
+        num_repeticoes = (LARGURA_TOTAL_FUNDO // LARGURA_TELA) + 2
+        for i in range(num_repeticoes):
+            bg = arcade.Sprite(background_path)
+            bg.center_x = (i * LARGURA_TELA) + (LARGURA_TELA // 2)
+            bg.center_y = ALTURA_TELA // 2.6
+            self.background_list.append(bg)
 
         # Câmera
         self.camera = arcade.Camera2D()
@@ -66,7 +72,7 @@ class ViewMundo(arcade.View):
         self.idle_textures = [arcade.load_texture(p) for p in PLAYER_IDLE]
         self.player_sprite = arcade.Sprite()
         self.player_sprite.texture = self.idle_textures[0]
-        self.player_sprite.scale = 0.2
+        self.player_sprite.scale = 0.25
         self.player_sprite.center_x = LARGURA_TELA // 2
         self.player_sprite.center_y = ALTURA_TELA // 2.7
         self.all_sprites.append(self.player_sprite)
@@ -85,9 +91,13 @@ class ViewMundo(arcade.View):
                 defesa=stats["defesa"],
                 velocidade=stats["velocidade"],
                 inventario={"Poção": 3},
-                ouro=100,
+                ouro=100,      # antigo
+                moedas=100,    # <<< adicione aqui
             )
         self.jogador = estado.jogador
+        # Garante que moedas sempre exista
+        if not hasattr(self.jogador, "moedas"):
+            self.jogador.moedas = getattr(self.jogador, "ouro", 0)
 
         # --- Cenário ---
         for x in range(0, 5000, 400):
@@ -96,19 +106,10 @@ class ViewMundo(arcade.View):
             tree.center_y = 400
             self.scenery_list.append(tree)
 
-        ground_texture = arcade.load_texture(ground_texture_path)
-        tile_size = 64
-        for x in range(0, 5000, tile_size):
-            ground = arcade.Sprite()
-            ground.texture = ground_texture
-            ground.scale = 0.8
-            ground.center_x = x + tile_size / 2
-            ground.center_y = 64
-            self.ground_list.append(ground)
 
         # --- Inimigos ---
         self.inimigos = arcade.SpriteList()
-        posicoes_inimigos = [(2400, 340), (3000, 340), (3600, 340)]
+        posicoes_inimigos = [(2400, 340), (3000, 340), (3600, 340), (3800, 340), (4000, 340), (4200, 340)]
         if estado:
             for i, (x, y) in enumerate(posicoes_inimigos, start=1):
                 nome_inimigo = f"inimigo_{i}"
@@ -145,7 +146,6 @@ class ViewMundo(arcade.View):
         self.camera.use()
         self.background_list.draw()
         self.scenery_list.draw()
-        self.ground_list.draw()
         self.all_sprites.draw()
 
         # --- Janela da loja (fixa na tela) ---

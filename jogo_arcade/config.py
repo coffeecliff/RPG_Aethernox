@@ -72,7 +72,7 @@ COR_MENSAGEM = arcade.color.YELLOW
 # ================== CONFIGURAÇÕES GERAIS ==================
 LARGURA_TELA = 1920
 ALTURA_TELA = 1080
-TITULO_JOGO = "Jogo Integrado: Cartas -> Mundo -> Luta"
+TITULO_JOGO = "RPG Aethernox"
  
  
 # ============================================================
@@ -126,8 +126,8 @@ PLAYER2_WALK = [
  
 # PLAYER 3 (Archer)
 PLAYER3_IDLE = [
-    SPRITES_DIR / "mage" / "idle1.jpg",
-    SPRITES_DIR / "mage" / "idle1.jpg",
+    SPRITES_DIR / "archer" / "idle1.jpg",
+    SPRITES_DIR / "archer" / "idle1.jpg",
 ]
  
 PLAYER3_WALK = [

@@ -41,6 +41,7 @@ class ViewBatalha(arcade.View):
                     "defesa": stats["defesa"],
                     "velocidade": stats["velocidade"],
                     "inventario": {"Poção": 3},
+                    "moedas": 0,  # novo atributo de moedas
                 },
             )
         else:
@@ -59,6 +60,14 @@ class ViewBatalha(arcade.View):
             self.jogador.defesa = stats.get("defesa", getattr(self.jogador, "defesa", 5))
             self.jogador.velocidade = stats.get("velocidade", getattr(self.jogador, "velocidade", 5))
             self.jogador.inventario = getattr(self.jogador, "inventario", {"Poção": 3})
+            if not hasattr(self.jogador, "moedas"):
+                self.jogador.moedas = 0  # inicia com 0 moedas
+            if not hasattr(self.jogador, "xp"):
+                self.jogador.xp = 0
+            if not hasattr(self.jogador, "xp_proximo"):
+                self.jogador.xp_proximo = 100
+            if not hasattr(self.jogador, "level"):
+                self.jogador.level = 1
 
         self.turno = 1
 
@@ -75,6 +84,7 @@ class ViewBatalha(arcade.View):
         self.vida_inimigo = getattr(self.inimigo, "vida", 120)
         self.max_vida_inimigo = getattr(self.inimigo, "vida_max", 120)
         self.inimigo_nome = getattr(self.inimigo, "nome", "Inimigo")
+        self.moedas_inimigo = getattr(self.inimigo, "moedas", random.randint(5, 20))  # moedas aleatórias por inimigo
 
         self.mensagem = ""
         self.mensagem_timer = 0
@@ -137,6 +147,7 @@ class ViewBatalha(arcade.View):
         if self.batalha_encerrada:
             return
 
+        # Aplica dano
         self.vida_inimigo = max(self.vida_inimigo - dano, 0)
         if hasattr(self.inimigo, "vida"):
             try:
@@ -144,22 +155,37 @@ class ViewBatalha(arcade.View):
             except Exception:
                 pass
 
+        # Mensagem do dano
         if fonte == "magia":
             self.mostrar_resultado_acao(f"✨ Magia causou {dano} de dano!")
         else:
             self.mostrar_resultado_acao(f"⚔️ Você causou {dano} de dano!")
 
+        # Inimigo derrotado
         if self.vida_inimigo <= 0:
-            self.mostrar_resultado_acao("Inimigo derrotado! Voltando ao mundo...")
             self.batalha_encerrada = True
+            self.jogador_pode_acionar = False  # bloqueia ações imediatamente
+
+            moedas_ganhas = random.randint(25, 70)
+            xp_ganho = random.randint(20, 40)
+            self.jogador.moedas += moedas_ganhas
+            self.jogador.xp += xp_ganho
+            self.verificar_level_up()
+
             if hasattr(self.inimigo, "vida"):
                 try:
                     self.inimigo.vida = 0
                 except Exception:
                     pass
+
+            self.mostrar_resultado_acao(
+                f"Inimigo derrotado! Você ganhou {moedas_ganhas} moedas e {xp_ganho} XP. Voltando ao mundo..."
+            )
+
             if not self._retorno_agendado:
                 self._retorno_agendado = True
-                arcade.schedule(self.voltar_mundo, 2)
+                arcade.schedule_once(self.voltar_mundo, 2)
+
 
     # =====================================================
     # DRAW
@@ -170,6 +196,32 @@ class ViewBatalha(arcade.View):
         self.inimigo_lista.draw()
         self.camera_gui.use()
 
+        # HUD jogador (movido para o topo da tela)
+
+
+        # HUD jogador (movido para o topo da tela)
+        base_x = 60
+        top_margin = ALTURA_TELA - 60  # ponto de partida próximo ao topo
+
+        arcade.draw_text(f"{self.jogador.classe}: {self.jogador.nome}", base_x, top_margin, COR_TEXTO, 26)
+        arcade.draw_text(f"Vida: {int(self.jogador.vida)}/{int(self.jogador.vida_max)}", base_x, top_margin - 50, COR_TEXTO, 26)
+        mana_atual = int(getattr(self.jogador, "mana", 0))
+        mana_max = int(getattr(self.jogador, "mana_max", 0))
+        arcade.draw_text(f"Mana: {mana_atual}/{mana_max}", base_x, top_margin - 100, COR_TEXTO, 26)
+        arcade.draw_text(f"Moedas: {self.jogador.moedas}", base_x, top_margin - 150, COR_TEXTO, 24)
+        arcade.draw_text(f"Turno: {self.turno}", base_x, top_margin - 200, COR_TEXTO, 24)
+
+        # ======= BARRA DE XP =======
+        xp = getattr(self.jogador, "xp", 0)
+        xp_proximo = getattr(self.jogador, "xp_proximo", 100)
+        barra_xp_largura = 200
+        barra_xp_altura = 20
+        barra_xp_left = base_x
+        barra_xp_bottom = top_margin - 240
+        xp_ratio = min(1.0, xp / xp_proximo)
+        arcade.draw_lbwh_rectangle_filled(barra_xp_left, barra_xp_bottom, barra_xp_largura, barra_xp_altura, arcade.color.GRAY)
+        arcade.draw_lbwh_rectangle_filled(barra_xp_left, barra_xp_bottom, barra_xp_largura * xp_ratio, barra_xp_altura, arcade.color.GREEN)
+        arcade.draw_text(f"XP: {xp}/{xp_proximo}", barra_xp_left + 10, barra_xp_bottom + 2, arcade.color.BLACK, 14)
         # Barra de vida do inimigo
         barra_largura, barra_altura = 500, 35
         barra_left = LARGURA_TELA / 2 - barra_largura / 2
@@ -179,14 +231,13 @@ class ViewBatalha(arcade.View):
         vida_width = barra_largura * max(0.0, min(1.0, vida_ratio))
         arcade.draw_lbwh_rectangle_filled(barra_left, barra_bottom, vida_width, barra_altura, COR_BARRA_VIDA_INIMIGO)
 
-        # HUD jogador
-        base_x = 60
-        arcade.draw_text(f"{self.jogador.classe}: {self.jogador.nome}", base_x, 160, COR_TEXTO, 26)
-        arcade.draw_text(f"Vida: {int(self.jogador.vida)}/{int(self.jogador.vida_max)}", base_x, 120, COR_TEXTO, 26)
-        mana_atual = int(getattr(self.jogador, "mana", 0))
-        mana_max = int(getattr(self.jogador, "mana_max", 0))
-        arcade.draw_text(f"Mana: {mana_atual}/{mana_max}", base_x, 80, COR_TEXTO, 26)
-        arcade.draw_text(f"Turno: {self.turno}", base_x, 40, COR_TEXTO, 24)
+
+        # === NOVO: Nível e XP ===
+        nivel = getattr(self.jogador, "nivel", 1)
+        xp = getattr(self.jogador, "xp", 0)
+        xp_proximo = getattr(self.jogador, "xp_proximo", 100)
+
+        arcade.draw_text(f"Level: {nivel}", base_x, top_margin - 230, COR_TEXTO, 24)
 
         # Botões
         for nome, (x, y) in self.box_coords.items():
@@ -228,10 +279,6 @@ class ViewBatalha(arcade.View):
 
         # Menu de itens
         if self.mostrar_itens:
-            menu_width = len(self.itens_opcoes) * (self.box_largura + 20) - 20
-            menu_height = self.box_altura + 20
-            menu_x = self.start_x
-            menu_y = self.start_y + 90
             menu_bottom = 20
             menu_top = 350
 
@@ -247,39 +294,114 @@ class ViewBatalha(arcade.View):
     # =====================================================
     # EVENTOS
     # =====================================================
+    def ganhar_xp(self, quantidade):
+        """Adiciona XP e faz o jogador subir de nível se necessário."""
+        self.jogador.xp += quantidade
+        self.mostrar_texto(f"Você ganhou {quantidade} XP!")
+
+        while self.jogador.xp >= self.xp_para_proximo_level:
+            self.jogador.xp -= self.xp_para_proximo_level
+            self.subir_level()
+
+    def verificar_level_up(self):
+        while self.jogador.xp >= self.jogador.xp_proximo:
+            self.jogador.xp -= self.jogador.xp_proximo
+            self.jogador.level += 1
+            self.jogador.vida_max += 10
+            self.jogador.vida = self.jogador.vida_max
+            self.jogador.mana_max += 5
+            self.jogador.mana = self.jogador.mana_max
+            self.jogador.ataque += 2
+            self.jogador.defesa += 1
+            self.jogador.velocidade += 1
+            self.jogador.moedas += 20  # recompensa extra
+            self.jogador.xp_proximo = int(self.jogador.xp_proximo * 1.2)
+            self.mostrar_texto(f"🎉 {self.jogador.nome} subiu para o nível {self.jogador.level}!")
+
+
+    def subir_level(self):
+        self.jogador.level += 1
+
+        # Aumento de stats
+        self.jogador.vida_max += 10
+        self.jogador.mana_max += 5
+        self.jogador.ataque += 2
+        self.jogador.defesa += 1
+        self.jogador.velocidade += 0.5
+
+        # Recupera vida e mana
+        self.jogador.vida = self.jogador.vida_max
+        self.jogador.mana = self.jogador.mana_max
+
+        # Recompensa em moedas
+        moedas_ganhas = 50 + self.jogador.level * 10  # progressivo
+        self.jogador.moedas += moedas_ganhas
+
+        self.mostrar_resultado_acao(
+            f"🏆 Level Up! Agora você é nível {self.jogador.level}.\n"
+            f"Moedas recebidas: {moedas_ganhas}."
+        )
+
+        # Opcional: aumentar XP necessário para próximo nível (progressivo)
+        self.xp_para_proximo_level = int(self.xp_para_proximo_level * 1.3)
+
+
     def on_show_view(self):
         self.inimigo_nome = getattr(self.inimigo, "nome", self.inimigo_nome)
         self.vida_inimigo = getattr(self.inimigo, "vida", self.vida_inimigo)
         self.max_vida_inimigo = getattr(self.inimigo, "vida_max", self.max_vida_inimigo)
         self.mostrar_inicio_combate()
 
+        # No início da batalha, o jogador pode agir
+        self.jogador_pode_acionar = True
+
     def on_mouse_press(self, x, y, button, modifiers):
         if self.batalha_encerrada:
             return
+
+        # ===== Menu de itens =====
         if self.mostrar_itens:
-            for i, item in enumerate(self.itens_opcoes):
+            for i, nome_item in enumerate(self.itens_opcoes):
                 ix = self.start_x + i * (self.box_largura + 20)
                 iy = self.start_y + 100
                 if ix <= x <= ix + self.box_largura and iy <= y <= iy + self.box_altura:
-                    self.jogador.vida = min(self.jogador.vida + 30, self.jogador.vida_max)
-                    try:
-                        self.jogador.inventario[item] -= 1
-                    except Exception:
-                        pass
-                    self.mostrar_resultado_acao(f"Você usou {item} e recuperou 30 de vida!")
+                    qtd = self.jogador.inventario.get(nome_item, 0)
+                    if qtd > 0:
+                        # Aplica efeito do item
+                        if nome_item == "Poção de Vida":
+                            self.jogador.vida = min(self.jogador.vida + 20, self.jogador.vida_max)
+                            msg_efeito = "recuperou 20 de vida"
+                        elif nome_item == "Poção de Mana":
+                            self.jogador.mana = min(self.jogador.mana + 15, self.jogador.mana_max)
+                            msg_efeito = "recuperou 15 de mana"
+                        else:
+                            msg_efeito = f"usou {nome_item}"
+
+                        # Subtrai do inventário
+                        self.jogador.inventario[nome_item] -= 1
+                        if self.jogador.inventario[nome_item] <= 0:
+                            del self.jogador.inventario[nome_item]
+
+                        self.mostrar_resultado_acao(f"Você {msg_efeito}!")
+
+                    else:
+                        self.mostrar_resultado_acao("Você não tem mais deste item!")
+
                     self.mostrar_itens = False
                     return
+
+            # Se clicou fora do item
             self.mostrar_itens = False
             self.mostrar_texto("Menu de itens fechado.")
             return
 
+        # ===== Botões de ação =====
         for nome, (bx, by) in self.box_coords.items():
             if bx <= x <= bx + self.box_largura and by <= y <= by + self.box_altura:
-                if nome == "Fugir" and self.fugir_desabilitado:
-                    self.mostrar_texto("Você não pode fugir agora.")
-                    return
                 self.acao(nome)
                 break
+
+
 
     # =====================================================
     # ATAQUES DO INIMIGO COM MACHINE LEARNING
@@ -288,6 +410,14 @@ class ViewBatalha(arcade.View):
         if self.batalha_encerrada or self.vida_inimigo <= 0:
             return
 
+        # Chance de erro do inimigo (15%)
+        if random.random() < 0.15:
+            self.mostrar_resultado_acao(f"{self.inimigo_nome} errou o ataque!")
+            self.jogador_pode_acionar = True
+            self.turno += 1
+            return
+
+        # Lógica normal do ataque
         vida_jogador_ratio = self.jogador.vida / self.jogador.vida_max if self.jogador.vida_max else 1
         mana_jogador_ratio = self.jogador.mana / self.jogador.mana_max if self.jogador.mana_max else 1
         vida_inimigo_ratio = self.vida_inimigo / self.max_vida_inimigo if self.max_vida_inimigo else 1
@@ -296,13 +426,10 @@ class ViewBatalha(arcade.View):
 
         if acao_predita == 0:
             dano = random.randint(5, 10)
-            texto = f"Inimigo causou {dano} de dano!"
         elif acao_predita == 1:
             dano = random.randint(10, 20)
-            texto = f"Inimigo causou {dano} de dano!"
         else:
             dano = random.randint(15, 25)
-            texto = f"Inimigo usou magia e causou {dano} de dano!"
 
         self.jogador.vida = max(self.jogador.vida - dano, 0)
         self.dano_inimigo_mensagens.append({
@@ -312,14 +439,93 @@ class ViewBatalha(arcade.View):
             "timer": 60
         })
 
+        # Libera jogador após o ataque
+        self.jogador_pode_acionar = True
+        self.turno += 1
+
         if self.jogador.vida <= 0:
             self.batalha_encerrada = True
             self.window.show_view(ViewGameOver(jogador_nome=self.jogador.nome))
 
+
+    # =====================================================
+    # AGENDAR ATAQUE
+    # =====================================================
     def agendar_ataque_inimigo(self):
         if self.batalha_encerrada or self.vida_inimigo <= 0:
             return
+        # Bloqueia ação do jogador (no caso de ataques subsequentes)
+        self.jogador_pode_acionar = False
         arcade.schedule_once(self.ataque_inimigo_com_ml, 0.8)
+
+    # =====================================================
+    # AÇÃO DO JOGADOR
+    # =====================================================
+    def acao(self, nome):
+        if self.batalha_encerrada:
+            return
+
+        if nome == "Atacar":
+            if not self.jogador_pode_acionar:
+                self.mostrar_texto("⏳ Aguarde o inimigo atacar!")
+                return
+
+            dano = random.randint(10, 25)
+            self.aplicar_dano_inimigo(dano, fonte="ataque")
+
+            # ⚡ Bloqueia jogador e agenda ataque do inimigo só depois de ação ofensiva
+            self.jogador_pode_acionar = False
+            self.agendar_ataque_inimigo()
+            self.turno += 1
+
+        elif nome == "Magia":
+            if not self.jogador_pode_acionar:
+                self.mostrar_texto("⏳ Aguarde o inimigo atacar!")
+                return
+
+            # Aqui, se magia for ofensiva, bloqueia turno e agenda ataque
+            bloqueia_turno, dano = self.usar_magia()  # ajustar usar_magia para retornar se passou turno
+            if bloqueia_turno:
+                self.jogador_pode_acionar = False
+                self.agendar_ataque_inimigo()
+                self.turno += 1
+
+        elif nome == "Item":
+            # Não bloqueia jogador, não passa turno
+            self.mostrar_itens = True
+            self.itens_opcoes = [item for item, qtd in self.jogador.inventario.items() if qtd > 0]
+            if not self.itens_opcoes:
+                self.mostrar_texto("Você não tem itens disponíveis.")
+                self.mostrar_itens = False
+                return
+            self.mostrar_texto("Escolha um item para usar (ou clique fora para cancelar).")
+
+        elif nome == "Fugir":
+            if not self.jogador_pode_acionar:
+                self.mostrar_texto("⏳ Aguarde o inimigo atacar!")
+                return
+
+            self.fugir_desabilitado = True  
+
+            vida_ratio = self.jogador.vida / self.jogador.vida_max if self.jogador.vida_max else 1
+            chance_fuga = 60
+            if vida_ratio <= 0.3:
+                chance_fuga += 20
+            resultado = random.randint(1, 100)
+            if resultado <= chance_fuga:
+                self.mostrar_resultado_acao("Você conseguiu fugir!")
+                self.fuga_sucesso = True
+                self.batalha_encerrada = True
+                if not self._retorno_agendado:
+                    self._retorno_agendado = True
+                    arcade.schedule(self.voltar_mundo, 1)
+            else:
+                self.mostrar_texto("Você tentou fugir, mas o inimigo bloqueou sua saída!")
+                # ⚡ Só agenda ataque se realmente passou o turno
+                self.jogador_pode_acionar = False
+                self.agendar_ataque_inimigo()
+                self.turno += 1
+
 
     # =====================================================
     # MAGIA, AÇÃO E FUGA
@@ -336,50 +542,7 @@ class ViewBatalha(arcade.View):
         else:
             self.mostrar_texto("⚠️ Mana insuficiente!")
 
-    def acao(self, nome):
-        if self.batalha_encerrada:
-            return
-
-        if nome == "Atacar":
-            dano = random.randint(10, 25)
-            self.aplicar_dano_inimigo(dano, fonte="ataque")
-            self.agendar_ataque_inimigo()
-            self.turno += 1
-        elif nome == "Magia":
-            self.usar_magia()
-        elif nome == "Item":
-            self.mostrar_itens = True
-            self.itens_opcoes = [item for item, qtd in self.jogador.inventario.items() if qtd > 0]
-            if not self.itens_opcoes:
-                self.mostrar_texto("Você não tem itens disponíveis.")
-                self.mostrar_itens = False
-                return
-            self.mostrar_texto("Escolha um item para usar (ou clique fora para cancelar).")
-        elif nome == "Fugir":
-            if self.fugir_desabilitado:
-                return
-            vida_ratio = self.jogador.vida / self.jogador.vida_max if self.jogador.vida_max else 1
-            chance_fuga = 60
-            if vida_ratio <= 0.3:
-                chance_fuga += 20
-            resultado = random.randint(1, 100)
-            if resultado <= chance_fuga:
-                self.mostrar_resultado_acao("Você conseguiu fugir!")
-                self.fuga_sucesso = True
-                self.batalha_encerrada = True
-                if not self._retorno_agendado:
-                    self._retorno_agendado = True
-                    arcade.schedule(self.voltar_mundo, 1)
-            else:
-                self.mensagem = "Você tentou fugir, mas o inimigo bloqueou sua saída!"
-                self.mensagem_timer = 120
-                self.fugir_desabilitado = True
-                dano = random.randint(5, 15)
-                self.jogador.vida = max(self.jogador.vida - dano, 0)
-                self.mostrar_resultado_acao(f"O inimigo contra-atacou e causou {dano} de dano!")
-                if self.jogador.vida <= 0:
-                    self.encerrar_batalha(vitoria=False)
-
+    
     # =====================================================
     # ENCERRAMENTO E RETORNO AO MUNDO
     # =====================================================

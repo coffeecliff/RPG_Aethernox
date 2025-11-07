@@ -19,26 +19,12 @@ class Loja(arcade.Sprite):
         self.aberta = False  # se a loja está aberta
         self.text_objects = []  # textos otimizados (arcade.Text)
         self.itens = [
-            {"number": "[1]", "nome": "Poção de Vida", "efeito": "+20 HP", "preco": 30},
-            {"number": "[2]", "nome": "Poção de Mana", "efeito": "+15 MP", "preco": 25},
-            {"number": "[3]", "nome": "Espada de Ferro", "efeito": "+5 ATQ", "preco": 100},
-            {"number": "[4]", "nome": "Armadura Leve", "efeito": "+3 DEF", "preco": 80},
+            {"number": "[1]", "nome": "Poção de Vida", "efeito": "+20 HP", "preco": 30, "tipo": "consumivel"},
+            {"number": "[2]", "nome": "Poção de Mana", "efeito": "+15 MP", "preco": 25, "tipo": "consumivel"},
+            {"number": "[3]", "nome": "Espada de Ferro", "efeito": "+5 ATQ", "preco": 100, "tipo": "equipamento"},
+            {"number": "[4]", "nome": "Armadura Leve", "efeito": "+3 DEF", "preco": 80, "tipo": "equipamento"},
         ]
         self._criar_textos_otimizados()  # NOVO: cria textos uma vez
-
-    # ========================================================
-    # ANTIGO: __init__ sem argumentos x/y/id
-    # ========================================================
-    # def __init__(self):
-    #     super().__init__()
-    #     self.aberta = False
-    #     self.id = 0
-    #     self.itens = [
-    #         {"nome": "Poção de Vida", "efeito": "+20 HP", "preco": 30},
-    #         {"nome": "Poção de Mana", "efeito": "+15 MP", "preco": 25},
-    #         {"nome": "Espada de Ferro", "efeito": "+5 ATQ", "preco": 100},
-    #         {"nome": "Armadura Leve", "efeito": "+3 DEF", "preco": 80},
-    #     ]
 
     # ========================================================
     # NOVO: desenha o sprite da loja no mundo
@@ -129,7 +115,7 @@ class Loja(arcade.Sprite):
 
         # === Ouro do jogador ===
         arcade.draw_text(
-            f"Seu ouro: {jogador.ouro} Moedas",
+            f"Seu ouro: {jogador.moedas} Moedas",  # antes era jogador.ouro
             left + 30,
             bottom + 25,
             arcade.color.DARK_YELLOW,
@@ -140,17 +126,46 @@ class Loja(arcade.Sprite):
     # ========================================================
     # NOVO: compra de item
     # ========================================================
+    def aplicar_item(self, jogador, item):
+        tipo = item.get("tipo")
+        nome = item["nome"]
+
+        if tipo == "consumivel":
+            if nome == "Poção de Vida":
+                jogador.vida += 20
+                if jogador.vida > jogador.vida_max:
+                    jogador.vida = jogador.vida_max
+            elif nome == "Poção de Mana":
+                jogador.mana += 15
+                if jogador.mana > jogador.mana_max:
+                    jogador.mana = jogador.mana_max
+        elif tipo == "equipamento":
+            # Só adiciona ao inventário, não aplica stats ainda
+            jogador.inventario[nome] = jogador.inventario.get(nome, 0) + 1
+
     def comprar_item(self, jogador, indice):
         """Permite comprar um item pelo índice"""
         if indice < 0 or indice >= len(self.itens):
-            return
+            return  # índice inválido
+
         item = self.itens[indice]
-        if jogador.ouro >= item["preco"]:
-            jogador.ouro -= item["preco"]
+
+        if jogador.moedas >= item["preco"]:
+            jogador.moedas -= item["preco"]  # gasta as moedas do jogador
+
+            # Armazena no inventário
             jogador.inventario[item["nome"]] = jogador.inventario.get(item["nome"], 0) + 1
+
+            # Aplica efeito imediato somente se for consumível
+            if item["tipo"] == "consumivel":
+                self.aplicar_item(jogador, item)
+
             arcade.play_sound(arcade.sound.load_sound(":resources:sounds/coin5.wav"))
+
         else:
+            # Som de erro se não houver moedas suficientes
             arcade.play_sound(arcade.sound.load_sound(":resources:sounds/error3.wav"))
+
 
     # ========================================================
     # NOVO: controle por teclado
