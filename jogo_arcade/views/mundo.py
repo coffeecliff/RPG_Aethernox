@@ -6,6 +6,7 @@ from sprites.inimigo import Inimigo
 from views.batalha import ViewBatalha
 from sprites.loja import Loja
 from types import SimpleNamespace
+from pathlib import Path
 
 
 class ViewMundo(arcade.View):
@@ -16,6 +17,29 @@ class ViewMundo(arcade.View):
         BASE_DIR = Path(__file__).resolve().parent.parent  # sobe um nível se este arquivo estiver em /views/
         IMAGENS_DIR = BASE_DIR / "imagens"
         
+        # No __init__(), após criar self.all_sprites, adicione:
+        self.paredes = arcade.SpriteList()
+
+        # Defina no início do arquivo ou dentro do __init__ do ViewMundo
+        self.LIMITE_ESQUERDO = 1000
+        self.LIMITE_DIREITO = 5000  # ou a largura total do seu cenário
+
+        # Dentro do __init__, crie a lista de paredes
+        self.paredes = arcade.SpriteList()
+
+        # Parede esquerda
+        parede_esq = arcade.SpriteSolidColor(10, ALTURA_TELA, (0, 0, 0))
+        parede_esq.alpha = 0
+        parede_esq.center_x = self.LIMITE_ESQUERDO - 5
+        parede_esq.center_y = ALTURA_TELA // 2
+        self.paredes.append(parede_esq)
+
+        # Parede direita
+        parede_dir = arcade.SpriteSolidColor(10, ALTURA_TELA, (0, 0, 0))
+        parede_dir.alpha = 0
+        parede_dir.center_x = self.LIMITE_DIREITO + 5
+        parede_dir.center_y = ALTURA_TELA // 2
+        self.paredes.append(parede_dir)
 
         # Caminho do fundo
         background_path = IMAGENS_DIR / "mundo1" / "cenario1.png"
@@ -90,7 +114,7 @@ class ViewMundo(arcade.View):
                 ataque=stats["ataque"],
                 defesa=stats["defesa"],
                 velocidade=stats["velocidade"],
-                inventario={"Poção": 3},
+                inventario={},
                 ouro=100,      # antigo
                 moedas=100,    # <<< adicione aqui
             )
@@ -99,17 +123,12 @@ class ViewMundo(arcade.View):
         if not hasattr(self.jogador, "moedas"):
             self.jogador.moedas = getattr(self.jogador, "ouro", 0)
 
-        # --- Cenário ---
-        for x in range(0, 5000, 400):
-            tree = arcade.SpriteSolidColor(80, 180, arcade.color.DARK_GREEN)
-            tree.center_x = x
-            tree.center_y = 400
-            self.scenery_list.append(tree)
+
 
 
         # --- Inimigos ---
         self.inimigos = arcade.SpriteList()
-        posicoes_inimigos = [(2400, 340), (3000, 340), (3600, 340), (3800, 340), (4000, 340), (4200, 340)]
+        posicoes_inimigos = [(2400, 340), (3600, 340), (4200, 340)]
         if estado:
             for i, (x, y) in enumerate(posicoes_inimigos, start=1):
                 nome_inimigo = f"inimigo_{i}"
@@ -119,17 +138,19 @@ class ViewMundo(arcade.View):
                     self.inimigos.append(inimigo)
                     self.all_sprites.append(inimigo)
 
-        # --- Lojas ---
-        self.lojas = []
-        posicoes_lojas = [(800, 340), (2800, 340)]
+  
+        # Verifica se existe
+        # Caminho base da imagem
 
-        for i, (x, y) in enumerate(posicoes_lojas):
-            loja = Loja(x=x, y=y, id=i)
-            self.lojas.append(loja)
-            self.all_sprites.append(loja)
+        caminho_imagem_loja = IMAGENS_DIR / "loja.png"
+        self.lojas = []
+        posicoes_lojas = [(1300, 340)]  # posições das lojas no mundo
+
+        loja = Loja(x=1300, y=340)
+        self.lojas.append(loja)
+        self.all_sprites.append(loja)
 
         self.loja_aberta = None  # controle da loja atual
-
         # Movimento
         self.velocity_x = 0
         self.moving_left = False
@@ -175,12 +196,21 @@ class ViewMundo(arcade.View):
                 else 0
             )
 
+        # Atualiza posição do jogador
         self.player_sprite.center_x += self.velocity_x
         self.player_sprite.scale_x = (
             abs(self.player_sprite.scale_x)
             if self.facing_right
             else -abs(self.player_sprite.scale_x)
         )
+
+        # --- Colisão com paredes invisíveis ---
+        if arcade.check_for_collision_with_list(self.player_sprite, self.paredes):
+            if self.player_sprite.center_x < self.LIMITE_ESQUERDO:
+                self.player_sprite.center_x = self.LIMITE_ESQUERDO
+            elif self.player_sprite.center_x > self.LIMITE_DIREITO:
+                self.player_sprite.center_x = self.LIMITE_DIREITO
+
 
         # Animação
         if abs(self.velocity_x) > 0.2:

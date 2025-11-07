@@ -40,7 +40,7 @@ class ViewBatalha(arcade.View):
                     "ataque": stats["ataque"],
                     "defesa": stats["defesa"],
                     "velocidade": stats["velocidade"],
-                    "inventario": {"Poção": 3},
+                    "inventario": {},
                     "moedas": 0,  # novo atributo de moedas
                 },
             )
@@ -59,7 +59,7 @@ class ViewBatalha(arcade.View):
             self.jogador.ataque = stats.get("ataque", getattr(self.jogador, "ataque", 10))
             self.jogador.defesa = stats.get("defesa", getattr(self.jogador, "defesa", 5))
             self.jogador.velocidade = stats.get("velocidade", getattr(self.jogador, "velocidade", 5))
-            self.jogador.inventario = getattr(self.jogador, "inventario", {"Poção": 3})
+            self.jogador.inventario = getattr(self.jogador, "inventario", {})
             if not hasattr(self.jogador, "moedas"):
                 self.jogador.moedas = 0  # inicia com 0 moedas
             if not hasattr(self.jogador, "xp"):

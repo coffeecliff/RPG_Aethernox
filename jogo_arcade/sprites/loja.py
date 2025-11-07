@@ -4,34 +4,35 @@ from config import *
 # ============================================================
 # CLASSE LOJA — FUNCIONA COMO UM ELEMENTO NO MUNDO
 # ============================================================
+caminho_imagem_loja = IMAGENS_DIR / "loja.png"
 
 class Loja(arcade.Sprite):
-    # ========================================================
-    # NOVO: __init__ completo (com parâmetros x, y, id)
-    # ========================================================
-    def __init__(self, x, y, id=0):
-        # NOVO: não herda textura direta — é um sprite visual simples
-        super().__init__(filename=None, center_x=x, center_y=y)
+    def __init__(self, x, y, id=0, imagem=None, scale=1.0):
         self.id = id
-        self.width = 80
-        self.height = 120
-        self.color = arcade.color.GOLDENROD
-        self.aberta = False  # se a loja está aberta
-        self.text_objects = []  # textos otimizados (arcade.Text)
+        self.aberta = False
+        self.text_objects = []
+
+        # Itens da loja
         self.itens = [
             {"number": "[1]", "nome": "Poção de Vida", "efeito": "+20 HP", "preco": 30, "tipo": "consumivel"},
             {"number": "[2]", "nome": "Poção de Mana", "efeito": "+15 MP", "preco": 25, "tipo": "consumivel"},
             {"number": "[3]", "nome": "Espada de Ferro", "efeito": "+5 ATQ", "preco": 100, "tipo": "equipamento"},
             {"number": "[4]", "nome": "Armadura Leve", "efeito": "+3 DEF", "preco": 80, "tipo": "equipamento"},
         ]
-        self._criar_textos_otimizados()  # NOVO: cria textos uma vez
+        self._criar_textos_otimizados()
 
-    # ========================================================
-    # NOVO: desenha o sprite da loja no mundo
-    # ========================================================
-    def draw(self):
-        arcade.draw_rectangle_filled(self.center_x, self.center_y, self.width, self.height, self.color)
-        arcade.draw_text("Loja", self.center_x, self.center_y + 70, arcade.color.BLACK, 12, anchor_x="center")
+        # --- imagem da loja ---
+        if imagem is None:
+            # caminho padrão
+            imagem = IMAGENS_DIR / "loja.png"
+
+        if not os.path.exists(imagem):
+            raise FileNotFoundError(f"Imagem da loja não encontrada: {imagem}")
+
+        super().__init__(filename=str(imagem), scale=scale)
+        self.center_x = x
+        self.center_y = y
+
 
     # ========================================================
     # NOVO: cria objetos de texto otimizados
