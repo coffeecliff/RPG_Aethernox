@@ -39,3 +39,7 @@ O sistema de **experiência (XP)** e **moedas** permite evoluir o personagem e r
  
     pip install numpy
  
+## 📃 Autores
+- Cauã Cunha Neves
+- Ana Paula Souza dos Santos Rosa
+- Lucas Alessandro de Paiva
